@@ -1,23 +1,40 @@
-// create web server
-// create a web server
+// create a web server that listens on port 8080
+
 var http = require('http');
 var fs = require('fs');
-var url = require('url');
 var path = require('path');
+var url = require('url');
 
-// create a server
-http.createServer(function(request, response) {
-    var pathname = url.parse(request.url).pathname;
-    var filepath = path.join(__dirname, 'public', pathname);
-    fs.stat(filepath, function(err, stats) {
-        if (err) {
-            console.log(err);
-            response.writeHead(404, {'Content-Type': 'text/html'});
-            response.end('<h1>404 Not Found</h1>');
-        } else {
-            fs.createReadStream(filepath).pipe(response);
+var server = http.createServer(function(req, res) {
+    var uri = url.parse(req.url).pathname;
+    var filename = path.join(process.cwd(), uri);
+
+    fs.exists(filename, function(exists) {
+        if (!exists) {
+            res.writeHead(404, {'Content-Type': 'text/plain'});
+            res.write('404 Not Found\n');
+            res.end();
+            return;
         }
-    });
-}).listen(3000);
 
-console.log('Server running at http://)
+        if (fs.statSync(filename).isDirectory()) {
+            filename += '/index.html';
+        }
+
+        fs.readFile(filename, 'binary', function(err, file) {
+            if (err) {
+                res.writeHead(500, {'Content-Type': 'text/plain'});
+                res.write(err + '\n');
+                res.end();
+                return;
+            }
+
+            res.writeHead(200);
+            res.write(file, 'binary');
+            res.end();
+        });
+    });
+});
+
+server.listen(8080);
+console.log('Server running at http://
