@@ -1,40 +1,51 @@
-// create a web server that listens on port 8080
+// Create web server
+// Create a route for GET /comments
+// Create a route for POST /comments
+// Create a route for GET /comments/:id
+// Create a route for PUT /comments/:id
+// Create a route for DELETE /comments/:id
 
-var http = require('http');
-var fs = require('fs');
-var path = require('path');
-var url = require('url');
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
+const comments = require('./comments');
 
-var server = http.createServer(function(req, res) {
-    var uri = url.parse(req.url).pathname;
-    var filename = path.join(process.cwd(), uri);
+app.use(bodyParser.json());
 
-    fs.exists(filename, function(exists) {
-        if (!exists) {
-            res.writeHead(404, {'Content-Type': 'text/plain'});
-            res.write('404 Not Found\n');
-            res.end();
-            return;
-        }
-
-        if (fs.statSync(filename).isDirectory()) {
-            filename += '/index.html';
-        }
-
-        fs.readFile(filename, 'binary', function(err, file) {
-            if (err) {
-                res.writeHead(500, {'Content-Type': 'text/plain'});
-                res.write(err + '\n');
-                res.end();
-                return;
-            }
-
-            res.writeHead(200);
-            res.write(file, 'binary');
-            res.end();
-        });
-    });
+app.get('/comments', (req, res) => {
+  res.json(comments);
 });
 
-server.listen(8080);
-console.log('Server running at http://
+app.post('/comments', (req, res) => {
+  const comment = req.body;
+  comments.push(comment);
+  res.json(comment);
+});
+
+app.get('/comments/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const comment = comments.find(comment => comment.id === id);
+  res.json(comment);
+});
+
+app.put('/comments/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const newComment = req.body;
+  comments.forEach((comment, index) => {
+    if (comment.id === id) {
+      comments[index] = newComment;
+    }
+  });
+  res.json(newComment);
+});
+
+app.delete('/comments/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const deletedComment = comments.find(comment => comment.id === id);
+  comments = comments.filter(comment => comment.id !== id);
+  res.json(deletedComment);
+});
+
+app.listen(3000, () => {
+  console.log('Server is listening on port 3000');
+});
