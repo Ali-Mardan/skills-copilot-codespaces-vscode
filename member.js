@@ -10,3 +10,5 @@ function skillsMember() {
     // Get the member's age
     var memberAge = getMemberAge();
     // Get the member's
+
+function storenumber
